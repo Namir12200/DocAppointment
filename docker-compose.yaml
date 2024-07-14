@@ -1,0 +1,66 @@
+version: '2.2'
+
+services:
+  db:
+    container_name: postgresql_db
+    image: postgres:16.3-alpine3.20
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+  message_broker:
+    container_name: message_broker
+    image: rabbitmq:3.13.3-alpine
+    # image: redis:7.2-alpine
+    # ports:
+    #   # - 6379:6379
+    #   - 5672:5672
+    # restart: always
+
+  cache:
+    container_name: cache
+    image: redis:7.2-alpine
+
+  web:
+    container_name: web
+    build: 
+      context: ./DocAppointment
+    ports:
+      - 8000:8000
+    environment:
+      - ALLOWED_HOSTS=${DOCAPP_HOST}
+      - SECRET_KEY=${DOCAPP_SECRET_KEY}
+      - DEBUG=${DOCAPP_DEBUG}
+    volumes:
+      - ./DocAppointment:/code/
+    depends_on:
+      - db
+      - message_broker
+      - cache
+
+  celery:
+    container_name: celery
+    build: 
+      context: ./DocAppointment
+    command: celery -A DocAppointment worker -l INFO
+    environment:
+      - ALLOWED_HOSTS=${DOCAPP_HOST}
+      - SECRET_KEY=${DOCAPP_SECRET_KEY}
+      - DEBUG=${DOCAPP_DEBUG}
+    volumes:
+      - ./DocAppointment:/code/
+    depends_on:
+      - db
+      - message_broker
+
+volumes:
+  pgdata:
