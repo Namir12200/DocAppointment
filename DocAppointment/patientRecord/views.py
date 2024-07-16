@@ -24,8 +24,6 @@ class PatientHistoryListView(APIView):
         else:
             records = PatientHistory.objects.filter(patient__pk=patientID)
 
-        # if len(records) == 0:
-        #     return Response()
         serializer = PatientHistorySerializer(records, many=True)
         return Response(serializer.data)
     

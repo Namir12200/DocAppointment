@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'django_celery_beat',
     'accounts',
     'routines',
     'patientRecord',
@@ -93,21 +94,18 @@ WSGI_APPLICATION = 'DocAppointment.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'USER': 'Namir',
-        # 'USER': os.environ.get('POSTGRES_USER', 'Namir'),
+        'USER': os.environ.get('POSTGRES_USER'),
         'NAME': 'Namir',
-        'PASSWORD': 'password123',
-        # 'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'password123'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
         'HOST': 'db',
-        'PORT': 5432,
-        # 'PORT': os.environ.get('POSTGRES_PORT', '5432') 
+        'PORT': os.environ.get('POSTGRES_PORT') 
     }
 }
 
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://cache:6379/0",
+        "LOCATION": "redis://cache:" + os.environ.get('CACHE_PORT') + "/0",
     }
 }
 
@@ -157,9 +155,9 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = "namir12200@gmail.com"
-EMAIL_HOST_PASSWORD = 'fbrctghnptitadiz'
-EMAIL_PORT = 587
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = os.environ.get('EMAIL_HOST_PORT')
 EMAIL_USE_TLS = True
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 

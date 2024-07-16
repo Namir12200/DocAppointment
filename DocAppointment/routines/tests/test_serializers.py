@@ -104,7 +104,7 @@ class SlotSerializerTestCase(APITestCase):
 
         data = {
             "doctor": self.doctor,
-            "appointment_date": datetime.date(2024, 7, 15),
+            "appointment_date": datetime.date(2024, 7, 16),
             "total_patients": 10
         }
         self.slotdate = SlotDate.objects.create(doctor=data['doctor'], appointment_date=data['appointment_date'], total_patients=data["total_patients"])

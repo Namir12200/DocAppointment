@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from .models import DoctorRoutine, Slot, SlotDate
 from accounts.serializers import ProfileSerializer
@@ -10,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from .permissions import IsRoutineOwnerOrReadOnly, IsSlotDateOwnerOrReadOnly, IsSlotOwnerOrReadOnly
 from django.db.utils import IntegrityError
 import datetime
-from django.forms.models import model_to_dict
+from .tasks import removeSlotDate
 
 day_order = {
     "SUN": 0,
@@ -42,9 +41,6 @@ class DoctorRoutineListView(APIView):
     permission_classes = [IsAuthenticated, IsRoutineOwnerOrReadOnly]
 
     def get(self, request):
-        # routines = DoctorRoutine.objects.all()
-        # serializer = DoctorRoutineSerializer(routines, many=True)
-        # return Response(serializer.data) 
         name = request.query_params.get('name')
         routines = []
         if name is not None:
@@ -102,18 +98,11 @@ class DoctorRoutineDetailView(APIView):
         routine = self.get_object(pk=pk)
         routine.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
-# Create a method to get the next possible slot date once the client limit has been reached
-# Define a method to get the next slot based on the day from the doctor's routine as well
 
 class SlotDateListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # slotDates = SlotDate.objects.all()
-        # serializer = SlotDateSerializer(slotDates, many=True)
-        # return Response(serializer.data)
-
         slotDates = SlotDate.objects.filter(doctor__doctor__user__pk=request.user.pk)
         
         serializer = SlotDateSerializer(slotDates, many=True)
@@ -150,11 +139,7 @@ class SlotDateDetailView(APIView):
 class SlotListView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        # slots = Slot.objects.all()
-        # serializer = SlotSerializer(slots, many=True)
-        # return Response(serializer.data)
-    
+    def get(self, request):    
         slots = []
         slotDate_id = request.query_params.get("date_ID")
         if slotDate_id is not None:
@@ -200,7 +185,8 @@ class SlotDetailView(APIView):
     
     def delete(self, request, pk):
         slot = self.get_object(pk=pk)
-        # slot.slot_date.total_patients -= 1
-        # slot.slot_date.save()
+        slot_date = slot.slot_date
         slot.delete()
+        if(slot_date.total_patients == 0):
+            removeSlotDate.delay(slot_date.pk)
         return Response(status=status.HTTP_204_NO_CONTENT)

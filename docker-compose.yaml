@@ -40,6 +40,10 @@ services:
       - ALLOWED_HOSTS=${DOCAPP_HOST}
       - SECRET_KEY=${DOCAPP_SECRET_KEY}
       - DEBUG=${DOCAPP_DEBUG}
+      - CACHE_PORT=${CACHE_PORT}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
     volumes:
       - ./DocAppointment:/code/
     depends_on:
@@ -56,6 +60,25 @@ services:
       - ALLOWED_HOSTS=${DOCAPP_HOST}
       - SECRET_KEY=${DOCAPP_SECRET_KEY}
       - DEBUG=${DOCAPP_DEBUG}
+    volumes:
+      - ./DocAppointment:/code/
+    depends_on:
+      - db
+      - message_broker
+
+  scheduler:
+    container_name: celery_scheduler
+    build: 
+      context: ./DocAppointment
+    command: celery -A DocAppointment beat -l info -S django
+    environment:
+      - ALLOWED_HOSTS=${DOCAPP_HOST}
+      - SECRET_KEY=${DOCAPP_SECRET_KEY}
+      - DEBUG=${DOCAPP_DEBUG}
+      - CACHE_PORT=${CACHE_PORT}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+      - EMAIL_PORT=${EMAIL_PORT}
     volumes:
       - ./DocAppointment:/code/
     depends_on:
